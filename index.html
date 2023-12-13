@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Div näitamine</title>
+  <style>
+
+    body {
+      color: rgb(125, 125, 255);
+      background-color: rgb(255, 167, 167);
+    }
+    #divContainer{
+      align-items: center;
+      justify-content: center;
+      align-content: center;
+      text-align: center;
+    
+    }
+    @media screen and (max-width: 1000px){
+      .container{
+        width: 45vw;
+        height: 25vh;
+      }      
+    }
+    .container {
+      width: 450px;
+      height: 300px;
+      position: relative;
+      margin-left: auto;
+      margin-right: auto;
+      perspective: 1000px;
+      float: left;
+      margin: 10px;
+      display: inline;
+    }
+
+    .card-container {
+      height: 100%;
+      width: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      display: inline-block;
+      transition: transform 1.5s;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      height: 100%;
+      width: 100%;
+      border-radius: 2rem;
+      box-shadow: 0 0 5px 2px rgba(50, 50, 50, 0.25);
+      position: absolute;
+      backface-visibility: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      font-size: 18px;
+      font-family: Arial, sans-serif;
+    }
+
+    .front {
+      background-color: #f0f0f0;
+      transform: rotateY(0);
+    }
+
+    .back {
+      background-color: #3a3a3a;
+      transform: rotateY(180deg);
+      color: white;
+    }
+
+    input {
+      margin-bottom: 10px;
+      padding: 5px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 5px 10px;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+    button#saveCards {
+      padding: 5px 10px;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+
+    button.savedCard {
+      display: inline;
+      padding: 5px 10px;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+
+  
+  </style>
+</head>
+<body>
+
+  <input type="text" id="questionInput" placeholder="Sisesta küsimus">
+  <input type="text" id="answerInput" placeholder="Sisesta vastus">
+  <button onclick="createDiv()">Salvesta</button>
+  <button id="saveCards" onclick="saveCards()">Salvesta kaardid</button>
+  <button onclick="deleteAllCards()">Kustuta kõik kaardid</button>
+  <button onclick="editCards()">Muuda kaarte</button>
+  <button onclick="saveEdits()">Salvesta muudatused</button>
+
+
+  
+  
+  <div id="savedCardsContainer">
+  </div>
+  <div id="divContainer">
+  </div>
+
+  <script>
+    
+    let savedCards = {};
+
+  window.onload = function () {
+    const savedCardsData = localStorage.getItem('savedCardsData');
+    if (savedCardsData) {
+      savedCards = JSON.parse(savedCardsData);
+      renderSavedCards();
+    }
+  };
+
+  function saveCards() {
+    let title = prompt('Palun sisesta pealkiri kaardidele:');
+    if (title) {
+      if (savedCards.hasOwnProperty(title)) {
+        const confirmOverwrite = confirm('Pealkiri on juba olemas. Kas soovite seda üle kirjutada?');
+        if (confirmOverwrite) {
+          savedCards[title] = document.getElementById('divContainer').innerHTML;
+          alert('Kaardid on üle kirjutatud pealkirjaga: ' + title);
+        } else {
+          title = prompt('Palun sisesta uus pealkiri kaardidele:');
+          if (title) {
+            savedCards[title] = document.getElementById('divContainer').innerHTML;
+            createSavedButton(title);
+            clearDivContainer();
+          }
+        }
+      } else {
+        savedCards[title] = document.getElementById('divContainer').innerHTML;
+        createSavedButton(title);
+        clearDivContainer();
+      }
+      saveToLocalStorage();
+    }
+  }
+
+  function saveToLocalStorage() {
+    localStorage.setItem('savedCardsData', JSON.stringify(savedCards));
+  }
+
+  function renderSavedCards() {
+    Object.keys(savedCards).forEach(title => {
+      createSavedButton(title);
+    });
+  }
+
+  function clearDivContainer() {
+    const divContainer = document.getElementById('divContainer');
+    divContainer.innerHTML = '';
+  }
+    function createDiv() {
+      const questionInput = document.getElementById('questionInput');
+      const answerInput = document.getElementById('answerInput');
+      const divContainer = document.getElementById('divContainer');
+  
+      const containerDiv = document.createElement('div');
+      containerDiv.classList.add('container');
+  
+      const cardContainer = document.createElement('div');
+      cardContainer.classList.add('card-container');
+      cardContainer.addEventListener('click', rotateCard);
+  
+      const frontDiv = document.createElement('div');
+      frontDiv.classList.add('card', 'front');
+      frontDiv.innerText = questionInput.value;
+  
+      const backDiv = document.createElement('div');
+      backDiv.classList.add('card', 'back');
+      backDiv.innerText = answerInput.value;
+  
+      cardContainer.appendChild(frontDiv);
+      cardContainer.appendChild(backDiv);
+  
+      containerDiv.appendChild(cardContainer);
+      divContainer.appendChild(containerDiv);
+
+      clearInputs();
+
+      savedCards[title] = document.getElementById('divContainer').innerHTML;
+    createSavedButton(title);
+    clearDivContainer();
+    saveToLocalStorage();
+
+    }
+
+ function editCards() {
+  const cardContainers = document.querySelectorAll('.card-container');
+
+  cardContainers.forEach(cardContainer => {
+    const frontCard = cardContainer.querySelector('.front');
+    const backCard = cardContainer.querySelector('.back');
+
+    // Luuakse muutmiseks input väljad ja nupp
+    const editQuestionInput = document.createElement('input');
+    editQuestionInput.type = 'text';
+    editQuestionInput.value = frontCard.innerText;
+    const editAnswerInput = document.createElement('input');
+    editAnswerInput.type = 'text';
+    editAnswerInput.value = backCard.innerText;
+    const saveChangesBtn = document.createElement('button');
+    saveChangesBtn.textContent = 'Salvesta muudatused';
+
+    // Salvestab muudatused vajutades nupule
+    saveChangesBtn.onclick = function () {
+      frontCard.innerText = editQuestionInput.value;
+      backCard.innerText = editAnswerInput.value;
+      this.remove(); // Eemaldab muutmiseks loodud väljad ja nupu
+    };
+
+    // Asendab kaardi tekstid muutmiseks loodud input väljadega
+    frontCard.innerHTML = '';
+    frontCard.appendChild(editQuestionInput);
+    backCard.innerHTML = '';
+    backCard.appendChild(editAnswerInput);
+
+    editQuestionInput.addEventListener('click', function (event) {
+      event.stopPropagation(); // Takistab kaardi pööramist input klikil
+    });
+
+    editAnswerInput.addEventListener('click', function (event) {
+      event.stopPropagation(); // Takistab kaardi pööramist input klikil
+    });
+
+
+    cardContainer.appendChild(saveChangesBtn); // Lisab nupu muudatuste salvestamiseks
+  });
+  saveToLocalStorage();
+}
+
+function saveEdits() {
+  const editedCards = document.querySelectorAll('.card-container');
+
+  editedCards.forEach(cardContainer => {
+    const frontCard = cardContainer.querySelector('.front');
+    const backCard = cardContainer.querySelector('.back');
+
+    // Salvestab muudetud tekstid kaartidele
+    frontCard.innerText = frontCard.querySelector('input').value;
+    backCard.innerText = backCard.querySelector('input').value;
+  });
+  saveToLocalStorage();
+}
+
+   
+    function rotateCard(event) {
+      const cardContainer = event.currentTarget;
+      cardContainer.style.transform = 'rotateY(180deg)';
+      cardContainer.removeEventListener('click', rotateCard);
+      cardContainer.addEventListener('click', rotateBack);
+    }
+  
+    function rotateBack(event) {
+      const cardContainer = event.currentTarget;
+      cardContainer.style.transform = 'rotateY(0)';
+      cardContainer.removeEventListener('click', rotateBack);
+      cardContainer.addEventListener('click', rotateCard);
+    }
+  
+    function clearInputs() {
+      document.getElementById('questionInput').value = '';
+      document.getElementById('answerInput').value = '';
+    }
+  
+    function saveCards() {
+    let title = prompt('Palun sisesta pealkiri kaardidele:');
+    if (title) {
+      if (savedCards.hasOwnProperty(title)) {
+        const confirmOverwrite = confirm('Pealkiri on juba olemas. Kas soovite seda üle kirjutada?');
+        if (confirmOverwrite) {
+          savedCards[title] = document.getElementById('divContainer').innerHTML;
+          alert('Kaardid on üle kirjutatud pealkirjaga: ' + title);
+        } else {
+          title = prompt('Palun sisesta uus pealkiri kaardidele:');
+          if (title) {
+            savedCards[title] = document.getElementById('divContainer').innerHTML;
+            createSavedButton(title);
+            document.getElementById('divContainer').innerHTML = '';
+          }
+        }
+      } else {
+        savedCards[title] = document.getElementById('divContainer').innerHTML;
+        createSavedButton(title);
+        document.getElementById('divContainer').innerHTML = '';
+      }
+    }
+    saveToLocalStorage();
+  }
+
+  
+    function createSavedButton(title) {
+      const savedCardsBtns = document.getElementById('savedCardsContainer');
+      const newButton = document.createElement('button');
+      newButton.classList.add('savedCard');
+      newButton.textContent = title;
+      newButton.onclick = function () {
+        showSavedCards(title);
+      };
+      savedCardsBtns.appendChild(newButton);
+      saveToLocalStorage();
+    }
+    function saveToLocalStorage() {
+    localStorage.setItem('savedCardsData', JSON.stringify(savedCards));
+  }
+  
+    function showSavedCards(title) {
+      document.querySelectorAll('.container').forEach(container => container.style.display = 'none');
+      document.getElementById('divContainer').innerHTML = savedCards[title];
+      document.querySelectorAll('.container')[0].style.display = 'block';
+      document.querySelectorAll('.container .card-container').forEach(cardContainer => {
+        cardContainer.addEventListener('click', rotateCard);
+      });
+    }
+    function deleteAllCards() {
+    const divContainer = document.getElementById('divContainer');
+    divContainer.innerHTML = '';
+  }
+  
+  
+  </script>
+  
+ 
+  
+  </body>
+</body>
+</html>
